@@ -50,8 +50,8 @@ gemini-chat-app/
 ### 1. Clone the Repository & Configure API Key
 
 ```bash
-git clone https://github.com/renantmagalhaes/gemini-studio-frontend.git
-cd gemini-studio-frontend
+git clone https://github.com/renantmagalhaes/gemini-studio-ui.git
+cd gemini-studio-ui
 
 # Copy the example .env file
 cp .env.example .env
