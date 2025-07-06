@@ -1,0 +1,24 @@
+services:
+  gemini-ui:
+    # Build the image from the Dockerfile in the current directory
+    build:
+      context: .
+      # network: host
+    # Name the container for easier management
+    container_name: gemini-chat-ui
+    # Map port 8501 on your host machine to port 8501 in the container
+    ports:
+      - "8501:8501"
+    # Pass the .env file to the container for the API key
+    env_file:
+      - ./.env
+    # This is the key part: Link local folders to folders inside the container
+    volumes:
+      # Map local './data' to '/app/data' inside the container
+      - ./data:/app/data
+      # Map local './uploads' to '/app/uploads' inside the container
+      - ./uploads:/app/uploads
+      # Map local './gems' to '/app/gems' inside the container
+      - ./gems:/app/gems
+    # Automatically restart the container if it crashes, unless explicitly stopped
+    restart: unless-stopped

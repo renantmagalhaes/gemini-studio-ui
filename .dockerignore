@@ -1,0 +1,23 @@
+# Ignore Git directory
+.git/
+.gitignore
+
+# Ignore Python virtual environment
+venv/
+.venv/
+
+# Ignore Python bytecode and caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignore local config and data files that shouldn't be in the image
+.env
+data/
+uploads/
+
+# Ignore Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore

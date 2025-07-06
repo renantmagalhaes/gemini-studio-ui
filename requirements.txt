@@ -1,0 +1,4 @@
+streamlit
+google-generativeai
+python-dotenv
+streamlit-js-eval  # <-- ADD THIS LINE
