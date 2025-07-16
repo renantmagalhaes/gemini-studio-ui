@@ -14,7 +14,8 @@ try:
     genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 except (AttributeError, ValueError):
     st.error(
-        "⚠️ Google API Key not found or invalid. Please check your .env file.", icon="🔥")
+        "⚠️ Google API Key not found or invalid. Please check your .env file.", icon="🔥"
+    )
     st.stop()
 
 DATA_DIR = "data"
@@ -31,16 +32,12 @@ AVAILABLE_MODELS = {
     "Gemini 1.5 Flash": "models/gemini-1.5-flash-latest",
 }
 
-# --- NEW --- A list of models known to NOT support grounding
+# A list of models known to NOT support grounding
 # We will use this to disable the toggle in the UI.
-GROUNDING_UNSUPPORTED_MODELS = [
-    "models/gemini-2.5-pro",
-    "models/gemini-2.5-flash"
-]
+GROUNDING_UNSUPPORTED_MODELS = ["models/gemini-2.5-pro", "models/gemini-2.5-flash"]
 
 
 def load_gems():
-    # ... (This function remains unchanged) ...
     gems = {}
     if not os.path.exists(GEMS_DIR):
         return gems
@@ -48,7 +45,7 @@ def load_gems():
         if filename.endswith(".json"):
             filepath = os.path.join(GEMS_DIR, filename)
             try:
-                with open(filepath, 'r') as f:
+                with open(filepath, "r") as f:
                     gem_data = json.load(f)
                     gem_key = os.path.splitext(filename)[0]
                     if "name" in gem_data and "prompt" in gem_data:
@@ -60,14 +57,12 @@ def load_gems():
 
 GEMS = load_gems()
 if not GEMS:
-    st.error(
-        f"No valid gem files found in the '{GEMS_DIR}' directory.", icon="🔥")
+    st.error(f"No valid gem files found in the '{GEMS_DIR}' directory.", icon="🔥")
     st.stop()
 
 
 @st.cache_data
 def get_local_ip():
-    # ... (This function remains unchanged) ...
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
@@ -79,18 +74,15 @@ def get_local_ip():
 
 
 def get_model(model_name, grounding_enabled):
-    # ... (This function remains unchanged) ...
     tools = ["google_search_retrieval"] if grounding_enabled else None
     return genai.GenerativeModel(model_name=model_name, tools=tools)
 
 
 def sanitize_filename(name):
-    # ... (This function remains unchanged) ...
-    return re.sub(r'[^\w\s.-]', '', name).strip().replace(' ', '_')
+    return re.sub(r"[^\w\s.-]", "", name).strip().replace(" ", "_")
 
 
 def get_chat_title(chat_data):
-    # ... (This function remains unchanged) ...
     for message in chat_data["messages"]:
         if message["role"] == "user":
             return message["content"][:40] + "..."
@@ -98,13 +90,19 @@ def get_chat_title(chat_data):
 
 
 def load_chats():
-    # ... (This function remains unchanged) ...
-    chat_files = sorted([os.path.join(DATA_DIR, f) for f in os.listdir(
-        DATA_DIR) if f.endswith('.json')], key=os.path.getmtime, reverse=True)
+    chat_files = sorted(
+        [
+            os.path.join(DATA_DIR, f)
+            for f in os.listdir(DATA_DIR)
+            if f.endswith(".json")
+        ],
+        key=os.path.getmtime,
+        reverse=True,
+    )
     chats = {}
     for filepath in chat_files:
         try:
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 chat_data = json.load(f)
                 chat_id = os.path.basename(filepath)
                 chats[chat_id] = chat_data
@@ -114,14 +112,12 @@ def load_chats():
 
 
 def save_chat(chat_id, chat_data):
-    # ... (This function remains unchanged) ...
     filepath = os.path.join(DATA_DIR, chat_id)
-    with open(filepath, 'w') as f:
+    with open(filepath, "w") as f:
         json.dump(chat_data, f, indent=4)
 
 
 # --- SESSION STATE INITIALIZATION ---
-# (No changes in this section)
 if "chats" not in st.session_state:
     st.session_state.chats = load_chats()
 if "view" not in st.session_state:
@@ -144,7 +140,6 @@ if "params_checked" not in st.session_state:
     st.session_state.params_checked = True
 
 # --- SIDEBAR UI ---
-# (No changes in this section)
 with st.sidebar:
     st.title("💎 Gemini Chats")
     st.write("Manage your conversations here.")
@@ -156,13 +151,16 @@ with st.sidebar:
         st.rerun()
     st.header("Conversations")
     st.session_state.search_query = st.text_input(
-        "Search chats...", value=st.session_state.search_query, placeholder="Search content of all chats...")
+        "Search chats...",
+        value=st.session_state.search_query,
+        placeholder="Search content of all chats...",
+    )
     filtered_chats = {}
     if st.session_state.search_query:
         query_lower = st.session_state.search_query.lower()
         for chat_id, chat_data in st.session_state.chats.items():
-            for message in chat_data.get('messages', []):
-                if query_lower in message.get('content', '').lower():
+            for message in chat_data.get("messages", []):
+                if query_lower in message.get("content", "").lower():
                     filtered_chats[chat_id] = chat_data
                     break
     else:
@@ -176,8 +174,12 @@ with st.sidebar:
         else:
             default_index = None
         selected_chat_id = st.radio(
-            "Select a chat:", options=chat_id_list, format_func=lambda cid: get_chat_title(filtered_chats[cid]),
-            label_visibility="collapsed", index=default_index, key=f"radio_{len(chat_id_list)}_{st.session_state.search_query}"
+            "Select a chat:",
+            options=chat_id_list,
+            format_func=lambda cid: get_chat_title(filtered_chats[cid]),
+            label_visibility="collapsed",
+            index=default_index,
+            key=f"radio_{len(chat_id_list)}_{st.session_state.search_query}",
         )
         if selected_chat_id and selected_chat_id != st.session_state.active_chat_id:
             st.session_state.active_chat_id = selected_chat_id
@@ -198,17 +200,17 @@ with st.sidebar:
     st.markdown("---")
     st.header("Settings")
     st.session_state.save_uploads = st.toggle(
-        "Save Uploads to Disk", value=st.session_state.save_uploads,
-        help="If enabled, all uploaded files will be saved to the ./uploads folder."
+        "Save Uploads to Disk",
+        value=st.session_state.save_uploads,
+        help="If enabled, all uploaded files will be saved to the ./uploads folder.",
     )
 
 
 def file_uploader_and_prompt_area():
-    # ... (This function remains unchanged) ...
     st.session_state.uploaded_files = st.file_uploader(
         "Upload files or drag and drop here",
         accept_multiple_files=True,
-        key=f"file_uploader_{st.session_state.view}_{st.session_state.active_chat_id}"
+        key=f"file_uploader_{st.session_state.view}_{st.session_state.active_chat_id}",
     )
     if st.session_state.uploaded_files:
         with st.expander("Attached Files"):
@@ -218,18 +220,19 @@ def file_uploader_and_prompt_area():
 
 
 def stream_and_display_response(prompt, chat_session):
-    # ... (This function remains unchanged) ...
     content_parts = []
     if st.session_state.uploaded_files:
         for uploaded_file in st.session_state.uploaded_files:
             if st.session_state.save_uploads:
                 timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
                 save_path = os.path.join(
-                    UPLOADS_DIR, f"{timestamp}_{sanitize_filename(uploaded_file.name)}")
+                    UPLOADS_DIR, f"{timestamp}_{sanitize_filename(uploaded_file.name)}"
+                )
                 with open(save_path, "wb") as f:
                     f.write(uploaded_file.getvalue())
             content_parts.append(
-                {"mime_type": uploaded_file.type, "data": uploaded_file.getvalue()})
+                {"mime_type": uploaded_file.type, "data": uploaded_file.getvalue()}
+            )
     content_parts.append(prompt)
     with st.chat_message("assistant"):
         placeholder = st.empty()
@@ -257,19 +260,23 @@ def stream_and_display_response(prompt, chat_session):
 # --- MAIN CHAT INTERFACE ---
 if st.session_state.view == "new_chat":
     st.title("✨ Start a New Conversation")
-    st.caption(
-        "Select your settings below, attach files, and send your first message.")
+    st.caption("Select your settings below, attach files, and send your first message.")
     st.subheader("1. Choose Persona (Gem)")
     gem_keys = sorted(GEMS.keys())
-    preselected_key = st.session_state.get('preselected_gem', 'default')
+    preselected_key = st.session_state.get("preselected_gem", "default")
     try:
         default_gem_index = gem_keys.index(preselected_key)
     except ValueError:
         default_gem_index = 0
-    selected_gem_key = st.selectbox("Choose your Gem:", options=gem_keys, index=default_gem_index,
-                                    format_func=lambda key: GEMS[key]["name"], label_visibility="collapsed")
-    if 'preselected_gem' in st.session_state:
-        del st.session_state['preselected_gem']
+    selected_gem_key = st.selectbox(
+        "Choose your Gem:",
+        options=gem_keys,
+        index=default_gem_index,
+        format_func=lambda key: GEMS[key]["name"],
+        label_visibility="collapsed",
+    )
+    if "preselected_gem" in st.session_state:
+        del st.session_state["preselected_gem"]
     st.write("---")
     if st.button(f"🔗 Generate Bookmark Link", use_container_width=True):
         st.session_state.show_bookmark_url = True
@@ -285,17 +292,18 @@ if st.session_state.view == "new_chat":
     col1, col2 = st.columns(2)
     with col1:
         selected_model_name = st.selectbox(
-            "Select a Model:", options=list(AVAILABLE_MODELS.keys()))
+            "Select a Model:", options=list(AVAILABLE_MODELS.keys())
+        )
         model_name_for_api = AVAILABLE_MODELS[selected_model_name]
     with col2:
-        # --- MODIFIED --- This block now intelligently disables the toggle
+        # This block now intelligently disables the toggle
         grounding_is_disabled = model_name_for_api in GROUNDING_UNSUPPORTED_MODELS
 
         use_grounding = st.toggle(
             "Ground with Google Search",
             value=False,
             disabled=grounding_is_disabled,  # The key change is here
-            help="Enable the model to use Google Search. Not supported by all models."
+            help="Enable the model to use Google Search. Not supported by all models.",
         )
         if grounding_is_disabled:
             st.caption("Not supported for this model.")
@@ -304,17 +312,28 @@ if st.session_state.view == "new_chat":
         st.session_state.show_bookmark_url = False
         gem = GEMS[selected_gem_key]
         model_instance = get_model(model_name_for_api, use_grounding)
-        chat_session = model_instance.start_chat(history=[{'role': 'user', 'parts': [
-                                                 gem["prompt"]]}, {'role': 'model', 'parts': ["Understood. I'm ready."]}])
+        chat_session = model_instance.start_chat(
+            history=[
+                {"role": "user", "parts": [gem["prompt"]]},
+                {"role": "model", "parts": ["Understood. I'm ready."]},
+            ]
+        )
         with st.chat_message("user"):
             st.markdown(prompt)
         model_response = stream_and_display_response(prompt, chat_session)
-        serializable_history = [{'role': msg.role, 'parts': [
-            part.text for part in msg.parts]} for msg in chat_session.history]
+        serializable_history = [
+            {"role": msg.role, "parts": [part.text for part in msg.parts]}
+            for msg in chat_session.history
+        ]
         new_chat_data = {
-            "gem_key": selected_gem_key, "model_name": model_name_for_api, "grounding_enabled": use_grounding,
+            "gem_key": selected_gem_key,
+            "model_name": model_name_for_api,
+            "grounding_enabled": use_grounding,
             "api_history": serializable_history,
-            "messages": [{"role": "user", "content": prompt}, {"role": "assistant", "content": model_response}]
+            "messages": [
+                {"role": "user", "content": prompt},
+                {"role": "assistant", "content": model_response},
+            ],
         }
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
         filename_prompt = sanitize_filename(prompt)[:50]
@@ -327,7 +346,6 @@ if st.session_state.view == "new_chat":
         st.rerun()
 
 elif st.session_state.active_chat_id:
-    # This block is unchanged
     if st.session_state.active_chat_id not in st.session_state.chats:
         st.session_state.active_chat_id = None
         st.session_state.view = "new_chat"
@@ -336,15 +354,21 @@ elif st.session_state.active_chat_id:
     active_chat_data = st.session_state.chats[active_chat_id]
     chat_model_name = active_chat_data["model_name"]
     chat_grounding = active_chat_data["grounding_enabled"]
-    gem_key = active_chat_data.get('gem_key', 'default')
-    display_model_name = next((name for name, api_name in AVAILABLE_MODELS.items(
-    ) if api_name == chat_model_name), "Unknown Model")
+    gem_key = active_chat_data.get("gem_key", "default")
+    display_model_name = next(
+        (
+            name
+            for name, api_name in AVAILABLE_MODELS.items()
+            if api_name == chat_model_name
+        ),
+        "Unknown Model",
+    )
     st.title(f"Chat: {get_chat_title(active_chat_data)}")
     st.caption(
-        f"**Gem:** {GEMS[gem_key]['name']} | **Model:** {display_model_name} | **Grounding:** {'On' if chat_grounding else 'Off'}")
+        f"**Gem:** {GEMS[gem_key]['name']} | **Model:** {display_model_name} | **Grounding:** {'On' if chat_grounding else 'Off'}"
+    )
     model_instance = get_model(chat_model_name, chat_grounding)
-    chat_session = model_instance.start_chat(
-        history=active_chat_data["api_history"])
+    chat_session = model_instance.start_chat(history=active_chat_data["api_history"])
     for message in active_chat_data["messages"]:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -352,13 +376,15 @@ elif st.session_state.active_chat_id:
         with st.chat_message("user"):
             st.markdown(prompt)
         model_response = stream_and_display_response(prompt, chat_session)
-        serializable_history = [{'role': msg.role, 'parts': [
-            part.text for part in msg.parts]} for msg in chat_session.history]
+        serializable_history = [
+            {"role": msg.role, "parts": [part.text for part in msg.parts]}
+            for msg in chat_session.history
+        ]
         active_chat_data["api_history"] = serializable_history
+        active_chat_data["messages"].append({"role": "user", "content": prompt})
         active_chat_data["messages"].append(
-            {"role": "user", "content": prompt})
-        active_chat_data["messages"].append(
-            {"role": "assistant", "content": model_response})
+            {"role": "assistant", "content": model_response}
+        )
         save_chat(active_chat_id, active_chat_data)
         st.rerun()
 else:
